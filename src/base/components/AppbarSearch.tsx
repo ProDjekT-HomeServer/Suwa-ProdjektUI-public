@@ -207,6 +207,8 @@ export const AppbarSearch: React.FunctionComponent<IProps> = (props) => {
                 forcePopupIcon={false}
                 openOnFocus
                 fullWidth
+                // "fullWidth" alone does not stretch inside the row of app bar actions
+                sx={{ flexGrow: 1, minWidth: 0 }}
                 onKeyDown={() => {
                     if (hideSuggestions) {
                         setHideSuggestions(false);

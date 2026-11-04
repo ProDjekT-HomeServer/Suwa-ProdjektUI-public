@@ -173,13 +173,17 @@ export const LIQUID_GLASS_COMPONENTS: Components<Theme> = {
     },
     MuiDrawer: {
         styleOverrides: {
-            paper: ({ theme }) => liquidGlass(theme, { elevated: true }),
-            anchorBottom: {
-                '& > .MuiDrawer-paper': {
+            paper: ({ theme, ownerState }) => ({
+                ...liquidGlass(theme, { elevated: true }),
+                // the "anchorBottom" override key is not applied anymore since mui v9
+                ...(ownerState.anchor === 'bottom' && {
                     borderTopLeftRadius: GLASS_SURFACE_RADIUS,
                     borderTopRightRadius: GLASS_SURFACE_RADIUS,
-                },
-            },
+                    // a tall drawer would otherwise reach below the status bar, its top buttons could not be pressed
+                    maxHeight: 'calc(100% - env(safe-area-inset-top) - 8px)',
+                    paddingBottom: 'env(safe-area-inset-bottom)',
+                }),
+            }),
         },
     },
     MuiTooltip: {

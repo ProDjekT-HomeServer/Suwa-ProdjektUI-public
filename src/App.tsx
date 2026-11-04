@@ -16,6 +16,7 @@ import Box from '@mui/material/Box';
 import { AwaitableComponent } from 'awaitable-component';
 import { AppContext } from '@/base/contexts/AppContext.tsx';
 import { DefaultNavBar } from '@/features/navigation-bar/components/DefaultNavBar.tsx';
+import { InputTouchScroll } from '@/base/components/InputTouchScroll.tsx';
 import { SwipeBack } from '@/features/navigation-bar/components/SwipeBack.tsx';
 import { requestManager } from '@/lib/requests/RequestManager.ts';
 import { WebUIUpdateChecker } from '@/features/app-updates/components/WebUIUpdateChecker.tsx';
@@ -275,6 +276,7 @@ const MainApp = () => {
             }}
         >
             <SwipeBack />
+            <InputTouchScroll />
             <ErrorBoundary>
                 <Routes>
                     <Route path={AppRoutes.authentication.match}>
