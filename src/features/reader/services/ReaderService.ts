@@ -6,6 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+import { LocalReadingProgress } from '@/features/chapter/services/LocalReadingProgress.ts';
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Direction } from '@mui/material/styles';
@@ -222,6 +223,19 @@ export class ReaderService {
             (passedPatch) => {
                 const { manga } = getReaderStore();
                 const isIncognito = !!manga && incognitoSourceIds.includes(manga.sourceId);
+
+                if (isIncognito && passedPatch.lastPageRead != null) {
+                    // incognito keeps the progress on this device, to still show where the reading stopped
+                    const { currentChapter: incognitoChapter } = getReaderChaptersStore();
+                    if (incognitoChapter) {
+                        LocalReadingProgress.set(
+                            incognitoChapter.id,
+                            passedPatch.lastPageRead,
+                            getReaderChapterFromCache(incognitoChapter.id)?.pageCount ?? incognitoChapter.pageCount,
+                        );
+                    }
+                }
+
                 // incognito: neither the reading progress nor the history is allowed to get updated
                 const patch: UpdateChapterPatchInput = isIncognito
                     ? { isBookmarked: passedPatch.isBookmarked }

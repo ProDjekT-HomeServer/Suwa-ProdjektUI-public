@@ -39,6 +39,7 @@ import {
     getReaderChapterViewResumeMode,
 } from '@/features/reader/Reader.utils.ts';
 import { coerceIn, noOp } from '@/lib/HelperFunctions.ts';
+import { LocalReadingProgress } from '@/features/chapter/services/LocalReadingProgress.ts';
 import { useNavBarContext } from '@/features/navigation-bar/NavbarContext.tsx';
 import type { NavbarContextType } from '@/features/navigation-bar/NavigationBar.types.ts';
 import { useReaderPreserveScrollPosition } from '@/features/reader/viewer/hooks/useReaderPreserveScrollPosition.ts';
@@ -149,6 +150,8 @@ const BaseReaderViewer = ({
         });
 
     const [, setTriggerReRender] = useState({});
+    // a snapshot, the progress updates while reading must not move the chapters to another page
+    const [localReadingProgress] = useState(LocalReadingProgress.getAll);
 
     const inViewportType = READING_MODE_TO_IN_VIEWPORT_TYPE[readingMode];
     const isLtrReadingDirection = readingDirection === ReadingDirection.LTR;
@@ -363,7 +366,12 @@ const BaseReaderViewer = ({
                         nextChapterId={nextChapter?.id}
                         isPreviousChapterVisible={previousNextChapterVisibility.previous}
                         isNextChapterVisible={previousNextChapterVisibility.next}
-                        lastPageRead={coerceIn(chapter.lastPageRead, 0, chapter.pageCount - 1)}
+                        lastPageRead={coerceIn(
+                            LocalReadingProgress.getEffective(chapter, localReadingProgress)?.lastPageRead ??
+                                chapter.lastPageRead,
+                            0,
+                            chapter.pageCount - 1,
+                        )}
                         currentChapterRemainingPages={currentChapterRemainingPages}
                         currentPageIndex={getReaderChapterViewerCurrentPageIndex(
                             currentPageIndex,

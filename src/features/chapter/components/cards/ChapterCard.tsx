@@ -45,6 +45,7 @@ import type { ChapterType } from '@/lib/graphql/generated/graphql-base.types.ts'
 import { usePress } from '@/base/hooks/usePress.ts';
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
 import { ReaderService } from '@/features/reader/services/ReaderService.ts';
+import { LocalReadingProgress, useLocalReadingProgress } from '@/features/chapter/services/LocalReadingProgress.ts';
 
 type TChapter = ChapterIdInfo &
     ChapterMangaInfo &
@@ -55,7 +56,8 @@ type TChapter = ChapterIdInfo &
     ChapterScanlatorInfo &
     ChapterNameInfo &
     ChapterSourceOrderInfo &
-    Pick<ChapterType, 'uploadDate'>;
+    Pick<ChapterType, 'uploadDate'> &
+    Partial<Pick<ChapterType, 'lastPageRead' | 'pageCount'>>;
 
 interface IProps {
     mode?: 'manga.page' | 'reader';
@@ -95,6 +97,18 @@ export const ChapterCard = memo((props: IProps) => {
     const isSelecting = selected !== null;
 
     const { isDownloaded } = chapter;
+
+    const localReadingProgress = useLocalReadingProgress();
+    const readingProgress = LocalReadingProgress.getEffective(chapter, localReadingProgress);
+    const readingProgressText = (() => {
+        if (!readingProgress) {
+            return '';
+        }
+
+        const page = readingProgress.lastPageRead + 1;
+        const { pageCount } = readingProgress;
+        return pageCount > 0 ? t`Page ${page} of ${pageCount}` : t`Page ${page}`;
+    })();
 
     const handleClick = (event: MouseEvent | TouchEvent) => {
         if (!isSelecting) {
@@ -150,7 +164,7 @@ export const ChapterCard = memo((props: IProps) => {
                                     secondaryText={chapter.scanlator}
                                     ternaryText={`${getDateString(Number(chapter.uploadDate ?? 0), true)}${
                                         isDownloaded ? ` — ${t`Downloaded`}` : ''
-                                    }`}
+                                    }${readingProgressText ? ` — ${readingProgressText}` : ''}`}
                                     infoIcons={
                                         chapter.isBookmarked && (
                                             <BookmarkIcon
