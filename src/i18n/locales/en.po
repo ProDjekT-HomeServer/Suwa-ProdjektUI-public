@@ -2975,6 +2975,14 @@ msgstr "Overlay mode"
 msgid "Page"
 msgstr "Page"
 
+#: src/features/chapter/components/cards/ChapterCard.tsx
+msgid "Page {page}"
+msgstr "Page {page}"
+
+#: src/features/chapter/components/cards/ChapterCard.tsx
+msgid "Page {page} of {pageCount}"
+msgstr "Page {page} of {pageCount}"
+
 #: src/features/reader/settings/layout/components/ReaderSettingPageGap.tsx
 msgid "Page gap"
 msgstr "Page gap"

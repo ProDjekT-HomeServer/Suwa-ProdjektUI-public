@@ -1,15 +1,24 @@
-# Tags the release branch with the fork version (package.json `version`).
+# Tags the release branch with the fork version (package.json `version`) and publishes the build as a GitHub release.
 # Release = bump that version in a branch and merge it into `release`; the tag (e.g. 1.0.0)
 # lands on the merged commit. An existing tag is never moved.
+#
+# The release carries `Suwa-ProdjektUI-<version>.tar.gz` (the contents of `build/`, ready for the server's webUI
+# directory) and its `.sha256`. The home server polls the latest release and deploys it (HomePage, roles/autodeploy).
+# Run the workflow manually to publish the release of a version that got tagged without one.
 name: Tag release
 
 on:
   push:
     branches: [release]
     paths: [package.json]
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+env:
+  # The upstream revision the fork is based on. The server only accepts a webUI whose `revision` it knows.
+  WEBUI_REVISION: r3518
 
 jobs:
   tag:
@@ -17,13 +26,66 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Tag the fork version
+      - name: Check the version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           version=$(jq -r .version package.json)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
           if git ls-remote --exit-code --tags origin "refs/tags/$version" >/dev/null; then
-            echo "Tag $version already exists, nothing to do."
-            exit 0
+            echo "tag_exists=true" >> "$GITHUB_OUTPUT"
           fi
+          if gh release view "$version" >/dev/null 2>&1; then
+            echo "Release $version already exists, nothing to do."
+            echo "release_exists=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Tag the fork version
+        if: steps.version.outputs.tag_exists != 'true'
+        run: |
+          version='${{ steps.version.outputs.version }}'
           git tag "$version"
           git push origin "$version"
           echo "Tagged $GITHUB_SHA as $version."
+
+      - name: Set up NodeJs
+        if: steps.version.outputs.release_exists != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+
+      - name: Install pnpm
+        if: steps.version.outputs.release_exists != 'true'
+        uses: pnpm/action-setup@v4.2.0
+        with:
+          version: 11.1.2
+
+      - name: Build
+        if: steps.version.outputs.release_exists != 'true'
+        run: |
+          version='${{ steps.version.outputs.version }}'
+          # a manual run builds the tagged commit, not whatever the branch points to now
+          git fetch --tags origin
+          git checkout --detach "refs/tags/$version"
+
+          pnpm build
+          echo "$WEBUI_REVISION" > build/revision
+
+          archive="Suwa-ProdjektUI-$version.tar.gz"
+          tar -czf "$archive" -C build .
+          sha256sum "$archive" > "$archive.sha256"
+
+      - name: Publish the release
+        if: steps.version.outputs.release_exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version='${{ steps.version.outputs.version }}'
+          gh release create "$version" \
+            --verify-tag \
+            --title "$version" \
+            --generate-notes \
+            "Suwa-ProdjektUI-$version.tar.gz" \
+            "Suwa-ProdjektUI-$version.tar.gz.sha256"

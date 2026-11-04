@@ -182,6 +182,8 @@ export function DefaultNavBar() {
                                     flexDirection: 'row',
                                     alignItems: 'center',
                                     flexShrink: 0,
+                                    // without a title, e.g. while searching, the actions take the whole width of the bar
+                                    ...(hideTitle && { flexGrow: 1, minWidth: 0 }),
                                     borderRadius: CAPSULE_RADIUS,
                                     px: 0.5,
                                     ml: 1,

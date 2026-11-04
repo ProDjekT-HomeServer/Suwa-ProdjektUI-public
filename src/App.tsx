@@ -8,14 +8,16 @@
 
 import CssBaseline from '@mui/material/CssBaseline';
 import type { PropsWithChildren, ReactNode } from 'react';
-import React, { useEffect, useLayoutEffect, useState } from 'react';
-import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import { loadErrorMessages, loadDevMessages } from '@apollo/client/dev';
 import { loadable } from 'react-lazily/loadable';
 import Box from '@mui/material/Box';
 import { AwaitableComponent } from 'awaitable-component';
 import { AppContext } from '@/base/contexts/AppContext.tsx';
 import { DefaultNavBar } from '@/features/navigation-bar/components/DefaultNavBar.tsx';
+import { ScrollRestoration } from '@/base/components/ScrollRestoration.tsx';
+import { InputTouchScroll } from '@/base/components/InputTouchScroll.tsx';
 import { SwipeBack } from '@/features/navigation-bar/components/SwipeBack.tsx';
 import { requestManager } from '@/lib/requests/RequestManager.ts';
 import { WebUIUpdateChecker } from '@/features/app-updates/components/WebUIUpdateChecker.tsx';
@@ -112,16 +114,6 @@ if (import.meta.env.DEV) {
     loadDevMessages();
     loadErrorMessages();
 }
-
-const ScrollToTop = () => {
-    const { pathname } = useLocation();
-
-    useLayoutEffect(() => {
-        window.scrollTo(0, 0);
-    }, [pathname]);
-
-    return null;
-};
 
 const InitializeGuard = ({ children }: PropsWithChildren) => {
     const [isInitialized, setIsInitialized] = useState(false);
@@ -275,6 +267,7 @@ const MainApp = () => {
             }}
         >
             <SwipeBack />
+            <InputTouchScroll />
             <ErrorBoundary>
                 <Routes>
                     <Route path={AppRoutes.authentication.match}>
@@ -405,7 +398,7 @@ const OffsetContainerRoot = ({ children }: { children?: ReactNode }) => {
 
 export const App: React.FC = () => (
     <AppContext>
-        <ScrollToTop />
+        <ScrollRestoration />
         <AwaitableComponent.Root />
 
         <ReactRouterSetter />

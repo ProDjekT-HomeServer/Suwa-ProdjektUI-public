@@ -54,6 +54,13 @@ export const useBackButton = () => {
 
         const canNavigateBack = backDelta < 0;
         if (!canNavigateBack) {
+            // the app history can be lost (e.g. reload), the browser history still knows the previous page
+            const browserHistoryIndex: unknown = window.history.state?.idx;
+            if (typeof browserHistoryIndex === 'number' && browserHistoryIndex > 0) {
+                navigate(-1);
+                return;
+            }
+
             navigate(AppRoutes.library.path());
             return;
         }
